@@ -1,0 +1,15 @@
+apiVersion: v1
+entries:
+  cluster-issuers:
+  - apiVersion: v2
+    created: "2025-05-22T16:08:31.471064033Z"
+    description: A Helm chart for cluster-issuers
+    digest: 21dc060576729add8a6d1406f6194a4710db3e5fdd08ef751dbf4e0b46a2f3d6
+    keywords:
+    - cert-manager
+    - letsencrypt
+    name: cluster-issuers
+    urls:
+    - https://es6kr.github.io/nginx-cert-issuers/cluster-issuers-0.0.1.tgz
+    version: 0.0.1
+generated: "2025-05-22T16:08:31.470791665Z"
