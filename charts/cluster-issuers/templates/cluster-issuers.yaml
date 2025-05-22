@@ -5,15 +5,15 @@ metadata:
   name: {{ $name }}
 spec:
   acme:
-    email: {{ default $.Values.global.email $issuer.email }}
+    email: {{ default $.Values.global.acme.email $issuer.email }}
     server: {{ $issuer.server }}
     privateKeySecretRef:
       name: {{ $issuer.privateKeySecret }}
     solvers:
 {{- if hasKey $issuer "solvers" }}
-{{ toYaml $issuer.solvers | indent 6 }}
-{{- else if hasKey $.Values.global "solvers" }}
-{{ toYaml $.Values.global.solvers | indent 6 }}
+{{ toYaml $issuer.solvers | indent 4 }}
+{{- else if hasKey $.Values.global.acme "solvers" }}
+{{ toYaml $.Values.global.acme.solvers | indent 4 }}
 {{- else }}
     - http01:
         ingress:

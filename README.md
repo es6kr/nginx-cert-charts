@@ -33,7 +33,7 @@ helm install cluster-issuers ./ -f values.yaml
 
 ```yaml
 global:
-  defaults: # Optional
+  acme: # Defaults for all clusterIssuers below, can be overridden per issuer
     email: your-email@example.com
     solvers:
       - http01:
@@ -44,11 +44,12 @@ clusterIssuers:
   letsencrypt-prod:
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecret: letsencrypt-prod
+    # email, solvers will fallback to global.acme
 
   letsencrypt-staging:
-    email: staging@example.com
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     privateKeySecret: letsencrypt-staging
+    email: staging@example.com # overrides global.acme.email
     solvers:
       - http01:
           ingress:
