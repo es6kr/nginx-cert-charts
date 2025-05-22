@@ -1,0 +1,7 @@
+apiVersion: v2
+name: cluster-issuers
+description: A Helm chart for cluster-issuers
+version: 0.0.1
+keywords:
+  - cert-manager
+  - letsencrypt

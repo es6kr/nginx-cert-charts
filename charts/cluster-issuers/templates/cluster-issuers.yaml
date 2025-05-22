@@ -1,0 +1,23 @@
+{{- range $name, $issuer := .Values.clusterIssuers }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ $name }}
+spec:
+  acme:
+    email: {{ default $.Values.global.email $issuer.email }}
+    server: {{ $issuer.server }}
+    privateKeySecretRef:
+      name: {{ $issuer.privateKeySecret }}
+    solvers:
+{{- if hasKey $issuer "solvers" }}
+{{ toYaml $issuer.solvers | indent 6 }}
+{{- else if hasKey $.Values.global "solvers" }}
+{{ toYaml $.Values.global.solvers | indent 6 }}
+{{- else }}
+    - http01:
+        ingress:
+          class: nginx
+{{- end }}
+---
+{{- end }}
