@@ -1,0 +1,36 @@
+clusterIssuers:
+  # Define multiple ClusterIssuers by name
+  letsencrypt-prod:
+    # ACME server URL for production
+    server: https://acme-v02.api.letsencrypt.org/directory
+
+    # Name of the Kubernetes secret to store the ACME private key
+    privateKeySecret: letsencrypt-prod
+
+    # Optional: override global email
+    # email: your-custom-email@example.com
+
+    # Optional: override global solvers
+    # solvers: []
+
+  letsencrypt-staging:
+    # ACME server URL for staging/testing
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+
+    # Name of the Kubernetes secret to store the ACME private key
+    privateKeySecret: letsencrypt-staging
+
+    # Optional: override global email
+    # email: your-custom-email@example.com
+
+    # Optional: override global solvers
+    # solvers: []
+
+global:
+  acme:
+    # Default email address used for all ClusterIssuers unless overridden individually
+    email: your-email@example.com
+
+    # Optional: Default ACME solvers used for all ClusterIssuers unless overridden individually
+    # Common example: using ingress-nginx with http01 solver
+    # solvers: []
