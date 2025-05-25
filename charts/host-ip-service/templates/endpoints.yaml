@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ .Values.endpoint.name }}
+  namespace: {{ .Values.namespace }}
+subsets:
+  - addresses:
+      - ip: {{ .Values.endpoint.ip }}
+    ports:
+      {{- range .Values.endpoint.ports }}
+      - name: {{ .name }}
+        port: {{ .port }}
+      {{- end }}

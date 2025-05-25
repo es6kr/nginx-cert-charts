@@ -1,0 +1,7 @@
+apiVersion: v2
+description: Helm chart to expose host IP services and generate optional Ingress entries per port.
+name: host-ip-service
+type: application
+version: 0.0.1
+annotations:
+  "helm.sh/schema": values.schema.json
