@@ -25,28 +25,4 @@ entries:
     urls:
     - https://github.com/es6kr/nginx-cert-charts/releases/download/host-ip-service-0.0.6/host-ip-service-0.0.6.tgz
     version: 0.0.6
-  - annotations:
-      helm.sh/schema: values.schema.json
-    apiVersion: v2
-    created: "2025-05-25T07:09:12.007632238Z"
-    description: Helm chart to expose host IP services and generate optional Ingress
-      entries per port.
-    digest: 9c55eac29430112ad127d984edf0c5c263779878da3b73bf404d2e422994778e
-    name: host-ip-service
-    type: application
-    urls:
-    - https://github.com/es6kr/nginx-cert-charts/releases/download/host-ip-service-0.0.5/host-ip-service-0.0.5.tgz
-    version: 0.0.5
-  - annotations:
-      helm.sh/schema: values.schema.json
-    apiVersion: v2
-    created: "2025-05-25T00:48:29.741746894Z"
-    description: Helm chart to expose host IP services and generate optional Ingress
-      entries per port.
-    digest: 36067e573433b6026966e9a0a05c115890697106a7cbb131b3610deb6f1e09ba
-    name: host-ip-service
-    type: application
-    urls:
-    - https://github.com/es6kr/nginx-cert-charts/releases/download/host-ip-service-0.0.1/host-ip-service-0.0.1.tgz
-    version: 0.0.1
 generated: "2025-05-25T09:52:27.137143657Z"
