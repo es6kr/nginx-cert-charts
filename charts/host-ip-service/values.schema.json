@@ -5,6 +5,7 @@
   "properties": {
     "namespace": {
       "type": "string",
+      "default": "default",
       "description": "Namespace where resources are deployed"
     },
     "endpoint": {
@@ -38,6 +39,7 @@
                 "properties": {
                   "enabled": {
                     "type": "boolean",
+                    "default": false,
                     "description": "Whether to create an ingress for this port"
                   },
                   "host": {
@@ -54,10 +56,11 @@
                     "additionalProperties": {
                       "type": "string"
                     },
+                    "default": {},
                     "description": "Custom annotations for this ingress"
                   }
                 },
-                "required": ["enabled"]
+                "default": {}
               }
             },
             "required": ["name", "port"]
@@ -68,14 +71,17 @@
     },
     "ingress": {
       "type": "object",
+      "default": {},
       "description": "Global ingress settings",
       "properties": {
         "className": {
           "type": "string",
+          "default": "nginx",
           "description": "Ingress class to use (e.g., nginx, traefik)"
         },
         "annotations": {
           "type": "object",
+          "default": {},
           "description": "Global ingress annotations",
           "additionalProperties": {
             "type": "string"
@@ -83,6 +89,7 @@
         },
         "tls": {
           "type": "array",
+          "default": [],
           "description": "TLS configuration for ingress",
           "items": {
             "type": "object",
@@ -105,5 +112,5 @@
       }
     }
   },
-  "required": ["namespace", "endpoint"]
+  "required": ["endpoint"]
 }

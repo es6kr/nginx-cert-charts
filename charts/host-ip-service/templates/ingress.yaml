@@ -1,6 +1,7 @@
-{{- $globalAnnotations := .Values.ingress.annotations | default dict }}
+{{- $ingress := coalesce .Values.ingress dict }}
+{{- $globalAnnotations := coalesce $ingress.annotations dict }}
 {{- range .Values.endpoint.ports }}
-  {{- if and .ingress.enabled .ingress.host }}
+  {{- if and .ingress .ingress.host }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -8,11 +9,11 @@ metadata:
   name: {{ printf "%s-%s" $.Values.endpoint.name .name }}
   namespace: {{ $.Values.namespace }}
   annotations:
-    {{- range $k, $v := merge $globalAnnotations (.ingress.annotations | default dict) }}
+    {{- range $k, $v := merge $globalAnnotations (coalesce .ingress.annotations dict) }}
     {{ $k }}: {{ $v | quote }}
     {{- end }}
 spec:
-  ingressClassName: {{ .Values.ingress.className | default "nginx" }}
+  ingressClassName: {{ coalesce $ingress.className "nginx" }}
   rules:
     - host: {{ .ingress.host }}
       http:
@@ -24,9 +25,9 @@ spec:
                 name: {{ $.Values.endpoint.name }}
                 port:
                   number: {{ .port }}
-  {{- if $.Values.ingress.tls }}
+  {{- if $ingress.tls }}
   tls:
-    {{- range $.Values.ingress.tls }}
+    {{- range $ingress.tls }}
     - secretName: {{ .secretName }}
       hosts:
         {{- range .hosts }}
