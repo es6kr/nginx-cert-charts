@@ -12,4 +12,17 @@ entries:
     urls:
     - https://github.com/es6kr/nginx-cert-charts/releases/download/cluster-issuers-0.0.1/cluster-issuers-0.0.1.tgz
     version: 0.0.1
-generated: "2025-05-22T16:38:07.770645573Z"
+  host-ip-service:
+  - annotations:
+      helm.sh/schema: values.schema.json
+    apiVersion: v2
+    created: "2025-05-25T00:48:29.741746894Z"
+    description: Helm chart to expose host IP services and generate optional Ingress
+      entries per port.
+    digest: 36067e573433b6026966e9a0a05c115890697106a7cbb131b3610deb6f1e09ba
+    name: host-ip-service
+    type: application
+    urls:
+    - https://github.com/es6kr/nginx-cert-charts/releases/download/host-ip-service-0.0.1/host-ip-service-0.0.1.tgz
+    version: 0.0.1
+generated: "2025-05-25T00:48:29.741751683Z"
