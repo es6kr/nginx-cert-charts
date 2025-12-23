@@ -1,30 +1,41 @@
 {{- $ingress := coalesce .Values.ingress dict }}
 {{- $globalAnnotations := coalesce $ingress.annotations dict }}
 {{- range .Values.endpoint.ports }}
-  {{- if and .ingress .ingress.host }}
+  {{- $hosts := list }}
+  {{- if .ingress.hosts }}
+    {{- $hosts = .ingress.hosts }}
+  {{- else if .ingress.host }}
+    {{- $hosts = list .ingress.host }}
+  {{- end }}
+  {{- if and .ingress (gt (len $hosts) 0) }}
+  {{- $portIngress := .ingress }}
+  {{- $portNum := .port }}
+  {{- $portName := .name }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ printf "%s-%s" $.Values.endpoint.name .name }}
+  name: {{ printf "%s-%s" $.Values.endpoint.name $portName }}
   namespace: {{ $.Values.namespace }}
   annotations:
-    {{- range $k, $v := merge $globalAnnotations (coalesce .ingress.annotations dict) }}
+    {{- range $k, $v := merge $globalAnnotations (coalesce $portIngress.annotations dict) }}
     {{ $k }}: {{ $v | quote }}
     {{- end }}
 spec:
   ingressClassName: {{ coalesce $ingress.className "nginx" }}
   rules:
-    - host: {{ .ingress.host }}
+    {{- range $hosts }}
+    - host: {{ . }}
       http:
         paths:
-          - path: {{ .ingress.path }}
+          - path: {{ $portIngress.path | default "/" }}
             pathType: Prefix
             backend:
               service:
                 name: {{ $.Values.endpoint.name }}
                 port:
-                  number: {{ .port }}
+                  number: {{ $portNum }}
+    {{- end }}
   {{- if $ingress.tls }}
   tls:
     {{- range $ingress.tls }}
