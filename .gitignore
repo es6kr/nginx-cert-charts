@@ -1,0 +1,11 @@
+# Local environment overrides
+.env.local
+.actrc.local
+
+# Helm
+*.tgz
+charts/*/charts/
+
+# IDE
+.idea/
+*.swp

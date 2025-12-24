@@ -1,0 +1,82 @@
+suite: endpoints tests
+templates:
+  - templates/endpoints.yaml
+
+tests:
+  - it: should create Endpoints with correct name and namespace
+    set:
+      namespace: web
+      endpoint:
+        name: example-host
+        ip: 10.0.0.100
+        ports:
+          - name: http
+            port: 80
+    asserts:
+      - isKind:
+          of: Endpoints
+      - equal:
+          path: metadata.name
+          value: example-host
+      - equal:
+          path: metadata.namespace
+          value: web
+
+  - it: should set correct IP address in subsets
+    set:
+      namespace: web
+      endpoint:
+        name: example-host
+        ip: 10.0.0.100
+        ports:
+          - name: http
+            port: 80
+    asserts:
+      - equal:
+          path: subsets[0].addresses[0].ip
+          value: "10.0.0.100"
+
+  - it: should include all ports in subsets
+    set:
+      namespace: default
+      endpoint:
+        name: test-host
+        ip: 10.0.0.1
+        ports:
+          - name: http
+            port: 80
+          - name: https
+            port: 443
+    asserts:
+      - equal:
+          path: subsets[0].ports[0].name
+          value: http
+      - equal:
+          path: subsets[0].ports[0].port
+          value: 80
+      - equal:
+          path: subsets[0].ports[1].name
+          value: https
+      - equal:
+          path: subsets[0].ports[1].port
+          value: 443
+
+  - it: should use example test values correctly
+    values:
+      - example-values.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-host
+      - equal:
+          path: metadata.namespace
+          value: web
+      - equal:
+          path: subsets[0].addresses[0].ip
+          value: "10.0.0.100"
+      - equal:
+          path: subsets[0].ports[0].name
+          value: http
+      - equal:
+          path: subsets[0].ports[0].port
+          value: 80

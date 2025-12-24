@@ -1,0 +1,14 @@
+# Default values for host-ip-service
+namespace: default
+
+endpoint:
+  name: example-host
+  ip: 10.0.0.1
+  ports:
+    - name: http
+      port: 80
+
+ingress:
+  className: nginx
+  annotations: {}
+  tls: []

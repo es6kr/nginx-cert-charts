@@ -1,0 +1,26 @@
+# 테스트용 values 파일 (다중 호스트 + TLS 예시)
+namespace: web
+
+endpoint:
+  name: example-host
+  ip: 10.0.0.100
+  ports:
+  - name: http
+    port: 80
+    ingress:
+      enabled: true
+      path: /
+      hosts:
+        - example.com
+        - www.example.com
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+  tls:
+    - secretName: example-com-tls
+      hosts:
+        - example.com
+        - www.example.com

@@ -1,0 +1,268 @@
+suite: ingress tests
+templates:
+  - templates/ingress.yaml
+
+tests:
+  - it: should create Ingress with correct name format (includes host slug)
+    set:
+      namespace: web
+      endpoint:
+        name: example-host
+        ip: 10.0.0.100
+        ports:
+          - name: http
+            port: 80
+            ingress:
+              enabled: true
+              host: example.com
+              path: /
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: example-host-http-example-com
+
+  - it: should set correct namespace
+    set:
+      namespace: web
+      endpoint:
+        name: example-host
+        ip: 10.0.0.100
+        ports:
+          - name: http
+            port: 80
+            ingress:
+              enabled: true
+              host: example.com
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: web
+
+  - it: should use nginx as default ingressClassName
+    set:
+      namespace: default
+      endpoint:
+        name: test-host
+        ip: 10.0.0.1
+        ports:
+          - name: http
+            port: 80
+            ingress:
+              enabled: true
+              host: test.com
+    asserts:
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+
+  - it: should support custom ingressClassName
+    set:
+      namespace: default
+      endpoint:
+        name: test-host
+        ip: 10.0.0.1
+        ports:
+          - name: http
+            port: 80
+            ingress:
+              enabled: true
+              host: test.com
+      ingress:
+        className: traefik
+    asserts:
+      - equal:
+          path: spec.ingressClassName
+          value: traefik
+
+  - it: should create rules for single host
+    set:
+      namespace: default
+      endpoint:
+        name: test-host
+        ip: 10.0.0.1
+        ports:
+          - name: http
+            port: 80
+            ingress:
+              enabled: true
+              host: test.com
+              path: /api
+    asserts:
+      - equal:
+          path: spec.rules[0].host
+          value: test.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: Prefix
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: test-host
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 80
+
+  - it: should create separate Ingress for each host
+    set:
+      namespace: web
+      endpoint:
+        name: example-host
+        ip: 10.0.0.100
+        ports:
+          - name: http
+            port: 80
+            ingress:
+              enabled: true
+              path: /
+              hosts:
+                - example.com
+                - www.example.com
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: example-host-http-example-com
+        documentIndex: 0
+      - equal:
+          path: spec.rules[0].host
+          value: example.com
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: example-host-http-www-example-com
+        documentIndex: 1
+      - equal:
+          path: spec.rules[0].host
+          value: www.example.com
+        documentIndex: 1
+
+  - it: should include global annotations
+    set:
+      namespace: web
+      endpoint:
+        name: example-host
+        ip: 10.0.0.100
+        ports:
+          - name: http
+            port: 80
+            ingress:
+              enabled: true
+              host: example.com
+      ingress:
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+          nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    asserts:
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt-prod
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/proxy-body-size"]
+          value: "50m"
+
+  - it: should merge per-port annotations with global
+    set:
+      namespace: default
+      endpoint:
+        name: test-host
+        ip: 10.0.0.1
+        ports:
+          - name: http
+            port: 80
+            ingress:
+              enabled: true
+              host: test.com
+              annotations:
+                nginx.ingress.kubernetes.io/rewrite-target: /
+      ingress:
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+    asserts:
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt-prod
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/rewrite-target"]
+          value: /
+
+  - it: should include TLS for matching host only
+    set:
+      namespace: web
+      endpoint:
+        name: example-host
+        ip: 10.0.0.100
+        ports:
+          - name: http
+            port: 80
+            ingress:
+              enabled: true
+              host: example.com
+      ingress:
+        tls:
+          - secretName: example-com-tls
+            hosts:
+              - example.com
+              - www.example.com
+    asserts:
+      - equal:
+          path: spec.tls[0].secretName
+          value: example-com-tls
+      - equal:
+          path: spec.tls[0].hosts[0]
+          value: example.com
+
+  - it: should not create Ingress when port has no ingress config
+    set:
+      namespace: default
+      endpoint:
+        name: test-host
+        ip: 10.0.0.1
+        ports:
+          - name: http
+            port: 80
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should use example test values correctly (creates 2 Ingresses)
+    values:
+      - example-values.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: Ingress
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: example-host-http-example-com
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: web
+        documentIndex: 0
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt-prod
+        documentIndex: 0
+      - equal:
+          path: spec.rules[0].host
+          value: example.com
+        documentIndex: 0
+      - equal:
+          path: spec.tls[0].secretName
+          value: example-com-tls
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: example-host-http-www-example-com
+        documentIndex: 1
+      - equal:
+          path: spec.rules[0].host
+          value: www.example.com
+        documentIndex: 1

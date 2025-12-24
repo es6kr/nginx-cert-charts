@@ -1,0 +1,15 @@
+namespace: test
+
+endpoint:
+  name: docker-host
+  ip: 172.17.0.1
+  ports:
+    - name: app1
+      port: 8080
+
+    - name: app2
+      port: 8081
+      ingress:
+        enabled: true
+        host: app.example.com
+        path: /
