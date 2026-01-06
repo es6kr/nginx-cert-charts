@@ -9,18 +9,165 @@ on:
       - '.github/workflows/pages.yaml'
       - 'charts/**'
 
-permissions: read-all
+permissions:
+  attestations: write
+  contents: write
+  id-token: write
+  packages: write
 
 jobs:
-  workflow:
-    name: Helm Workflows
-    uses: action-stars/helm-workflows/.github/workflows/release.yaml@0b498f1b9096b956f66f50954864e477dc3a639e # v0.8.5
-    secrets:
-      oci_password: ${{ secrets.GITHUB_TOKEN }}
-    permissions:
-      attestations: write
-      contents: write
-      id-token: write
-      packages: write
-    with:
-      publish_oci: true
+  check:
+    name: Check releasable charts
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.charts.outputs.release }}
+      matrix: ${{ steps.charts.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install YQ
+        uses: action-stars/install-tool-from-github-release@v0.2.6
+        with:
+          github_token: ${{ github.token }}
+          owner: mikefarah
+          repository: yq
+          extract: false
+          filename_format: "{name}_{os}_{arch}"
+          check_command: yq --version
+          version: latest
+
+      - name: Check for Helm charts to release
+        id: charts
+        run: |
+          set -euo pipefail
+          release_charts=""
+          for chart_dir in ./charts/*; do
+            if [[ -d "${chart_dir}" ]]; then
+              chart="$(basename "${chart_dir}")"
+              released_version="$(git tag -l --sort version:refname "${chart}-*" | tail -n 1 | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' || true)"
+              current_version="$(yq eval '.version' "./charts/${chart}/Chart.yaml")"
+              if [[ "${current_version}" != "${released_version}" ]] && [[ -z "$(git tag -l "${chart}-${current_version}")" ]]; then
+                echo "Chart: ${chart}, Released version: ${released_version}, Current version: ${current_version}"
+                release_charts="${release_charts}${chart},"
+              fi
+            fi
+          done
+          if [[ -n "${release_charts}" ]]; then
+            echo "release=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "release=false" >> "${GITHUB_OUTPUT}"
+          fi
+          echo "matrix=$(jq -Rrc 'split(",")' <<< "${release_charts%,}")" >> "${GITHUB_OUTPUT}"
+
+  release:
+    name: Release Helm charts
+    runs-on: ubuntu-latest
+    needs: check
+    if: ${{ needs.check.outputs.release == 'true' }}
+    strategy:
+      max-parallel: 1
+      matrix:
+        chart: ${{ fromJson(needs.check.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install YQ
+        uses: action-stars/install-tool-from-github-release@v0.2.6
+        with:
+          github_token: ${{ github.token }}
+          owner: mikefarah
+          repository: yq
+          extract: false
+          filename_format: "{name}_{os}_{arch}"
+          check_command: yq --version
+          version: latest
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: latest
+
+      - name: Install chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        with:
+          install_only: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+      - name: Get chart version
+        id: chart_version
+        run: |
+          echo "version=$(yq eval '.version' './charts/${{ matrix.chart }}/Chart.yaml')" >> "${GITHUB_OUTPUT}"
+
+      - name: Build dependencies
+        run: |
+          if [[ -f "./charts/${{ matrix.chart }}/Chart.lock" ]]; then
+            helm dependency build "./charts/${{ matrix.chart }}"
+          fi
+
+      - name: Package chart
+        id: package
+        run: |
+          set -euo pipefail
+          package_dir="./.cr-release-packages"
+          mkdir -p "${package_dir}"
+          cr package --package-path="${package_dir}" ./charts/${{ matrix.chart }}
+          echo "path=${package_dir}/${{ matrix.chart }}-${{ steps.chart_version.outputs.version }}.tgz" >> "${GITHUB_OUTPUT}"
+
+      - name: Create chart GH release
+        run: |
+          set -euo pipefail
+          package_dir="$(dirname ${{ steps.package.outputs.path }})"
+          release_name_template="{{ .Name }}-{{ .Version }}"
+          cr upload --token=${{ github.token }} --owner=${{ github.repository_owner }} --git-repo=${{ github.event.repository.name }} --commit=${{ github.sha }} --package-path="${package_dir}" --release-name-template="${release_name_template}" --make-release-latest=true
+
+      - name: Login to OCI registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Publish chart to OCI repository
+        id: publish_oci
+        run: |
+          set -euo pipefail
+          oci_repository="ghcr.io/${{ github.repository }}/${{ matrix.chart }}"
+          oci_image="${oci_repository}:${{ steps.chart_version.outputs.version }}"
+          helm push ${{ steps.package.outputs.path }} "oci://ghcr.io/${{ github.repository }}"
+          digest="$(crane digest "${oci_image}")"
+          cosign sign --yes "${oci_image}@${digest}"
+          echo "image=${oci_image}" >> "${GITHUB_OUTPUT}"
+          echo "digest=${digest}" >> "${GITHUB_OUTPUT}"
+          echo "repository=${oci_repository}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install Crane
+        uses: imjasonh/setup-crane@v0.4
+
+      - name: Attest OCI image
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ steps.publish_oci.outputs.repository }}
+          subject-digest: ${{ steps.publish_oci.outputs.digest }}
+          push-to-registry: true
+
+      - name: Publish chart to GH Pages
+        run: |
+          set -euo pipefail
+          index_dir="./.cr-index"
+          mkdir -p "${index_dir}"
+          package_dir="$(dirname ${{ steps.package.outputs.path }})"
+          cr index --token=${{ github.token }} --push --owner=${{ github.repository_owner }} --git-repo=${{ github.event.repository.name }} --package-path="${package_dir}" --index-path="${index_dir}/index.yaml"
