@@ -1,12 +1,12 @@
 apiVersion: v2
 name: cluster-issuers
 description: A Helm chart for cluster-issuers with cert-manager dependency
-version: 0.1.0
+version: 0.2.0
 keywords:
   - cert-manager
   - letsencrypt
 dependencies:
   - name: cert-manager
-    version: "1.17.x"
+    version: "~1.19.3"
     repository: https://charts.jetstack.io
     condition: certManager.enabled
