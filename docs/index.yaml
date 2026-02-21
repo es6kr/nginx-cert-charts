@@ -2,7 +2,23 @@ apiVersion: v1
 entries:
   cluster-issuers:
   - apiVersion: v2
-    created: "2026-02-21T22:41:25.426232+09:00"
+    created: "2026-02-22T00:04:21.24716+09:00"
+    dependencies:
+    - condition: certManager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.19.3
+    description: A Helm chart for cluster-issuers with cert-manager dependency
+    digest: 46198f53994b77c89d2b96904433cbefeeaf9acabdf325a850787ecca25ec79a
+    keywords:
+    - cert-manager
+    - letsencrypt
+    name: cluster-issuers
+    urls:
+    - https://es6kr.github.io/nginx-cert-charts/cluster-issuers-0.2.1.tgz
+    version: 0.2.1
+  - apiVersion: v2
+    created: "2026-02-22T00:04:21.243887+09:00"
     dependencies:
     - condition: certManager.enabled
       name: cert-manager
@@ -17,4 +33,4 @@ entries:
     urls:
     - https://es6kr.github.io/nginx-cert-charts/cluster-issuers-0.2.0.tgz
     version: 0.2.0
-generated: "2026-02-21T22:41:25.422031+09:00"
+generated: "2026-02-22T00:04:21.239715+09:00"
