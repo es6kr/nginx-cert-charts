@@ -112,6 +112,7 @@ jobs:
       - name: Build dependencies
         run: |
           if [[ -f "./charts/${{ matrix.chart }}/Chart.lock" ]]; then
+            helm repo add jetstack https://charts.jetstack.io
             helm dependency build "./charts/${{ matrix.chart }}"
           fi
 
@@ -130,6 +131,9 @@ jobs:
           package_dir="$(dirname ${{ steps.package.outputs.path }})"
           release_name_template="{{ .Name }}-{{ .Version }}"
           cr upload --token=${{ github.token }} --owner=${{ github.repository_owner }} --git-repo=${{ github.event.repository.name }} --commit=${{ github.sha }} --package-path="${package_dir}" --release-name-template="${release_name_template}" --make-release-latest=true
+
+      - name: Install Crane
+        uses: imjasonh/setup-crane@v0.4
 
       - name: Login to OCI registry
         uses: docker/login-action@v3
@@ -153,9 +157,6 @@ jobs:
           echo "image=${oci_image}" >> "${GITHUB_OUTPUT}"
           echo "digest=${digest}" >> "${GITHUB_OUTPUT}"
           echo "repository=${oci_repository}" >> "${GITHUB_OUTPUT}"
-
-      - name: Install Crane
-        uses: imjasonh/setup-crane@v0.4
 
       - name: Attest OCI image
         uses: actions/attest-build-provenance@v2
