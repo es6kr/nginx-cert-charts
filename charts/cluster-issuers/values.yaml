@@ -1,5 +1,8 @@
 # cert-manager subchart configuration
 # See https://artifacthub.io/packages/helm/cert-manager/cert-manager
+cert-manager:
+  fullnameOverride: cert-manager
+
 certManager:
   enabled: true
   crds:
