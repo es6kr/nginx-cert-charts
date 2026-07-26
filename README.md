@@ -7,7 +7,8 @@ A Helm chart for deploying multiple cert-manager `ClusterIssuers` for Let's Encr
 - Create multiple `ClusterIssuers` for Let's Encrypt (production & staging)
 - Support for global defaults (email, ingress class, solvers)
 - Per-issuer customization (email, solvers, private key secret)
-- Helm templating to manage issuers in a centralized, reusable manner
+- Declaratively manage `Certificate` resources, with optional [Reflector](https://github.com/emberstack/kubernetes-reflector) annotations to replicate the issued TLS secret into other namespaces
+- Helm templating to manage issuers and certificates in a centralized, reusable manner
 
 ## Prerequisites
 
@@ -58,6 +59,28 @@ clusterIssuers:
           dnsZones:
             - staging.example.com
 ```
+
+## Certificates
+
+Optionally declare `Certificate` resources alongside your issuers. Each entry under `certificates` renders one `cert-manager.io/v1` `Certificate`. Set `reflector.enabled: true` to add [Reflector](https://github.com/emberstack/kubernetes-reflector) annotations so the resulting TLS secret is auto-replicated into other namespaces — useful when one certificate (e.g. a wildcard) backs ingresses across several namespaces.
+
+```yaml
+certificates:
+  wildcard-example-com:
+    namespace: cert-manager        # default: global.certificates.namespace → "cert-manager"
+    secretName: wildcard-example-com-tls  # default: <name>-tls
+    issuerRef:
+      name: letsencrypt-prod       # required
+      kind: ClusterIssuer          # default: ClusterIssuer
+    dnsNames:                      # required
+      - "*.example.com"
+      - "example.com"
+    reflector:
+      enabled: true
+      allowedNamespaces: "app-a,app-b"  # comma-separated; omit/empty = all namespaces
+```
+
+Global defaults for all certificates can be set under `global.certificates` (`namespace`, `reflector.enabled`, `reflector.allowedNamespaces`, `reflector.autoEnabled`) and overridden per certificate.
 
 ---
 

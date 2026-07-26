@@ -1,14 +1,37 @@
-# cert-manager subchart configuration
+# Dependency condition (camelCase by Helm convention)
+certManager:
+  enabled: true
+
+# cert-manager subchart configuration (kebab-case = chart name)
 # See https://artifacthub.io/packages/helm/cert-manager/cert-manager
 cert-manager:
   fullnameOverride: cert-manager
-
-certManager:
-  enabled: true
   crds:
     enabled: true
   # extraArgs:
   #   - --acme-http01-solver-nameservers=8.8.8.8:53
+
+# Certificate definitions
+certificates: {}
+  # wildcard-es6-kr:
+  #   namespace: cert-manager           # default: global.certificates.namespace → "cert-manager"
+  #   secretName: wildcard-es6-kr-tls   # default: <name>-tls
+  #   issuerRef:
+  #     name: letsencrypt-prod          # required
+  #     kind: ClusterIssuer             # default: ClusterIssuer
+  #   dnsNames:                         # required
+  #     - "*.es6.kr"
+  #     - "es6.kr"
+  #   # duration: 2160h                 # optional (cert-manager default: 90d)
+  #   # renewBefore: 360h               # optional (cert-manager default: 30d)
+  #   # privateKey:
+  #   #   algorithm: RSA
+  #   #   size: 2048
+  #   # reflector:
+  #   #   enabled: true                 # default: global.certificates.reflector.enabled
+  #   #   allowedNamespaces: "ns1,ns2"  # default: global.certificates.reflector.allowedNamespaces
+  #   #   autoEnabled: true             # default: true
+  #   # annotations: {}                 # extra metadata annotations
 
 # ClusterIssuer definitions
 clusterIssuers:
@@ -30,3 +53,9 @@ global:
     #   - http01:
     #       ingress:
     #         class: nginx
+  # certificates:
+  #   namespace: cert-manager
+  #   reflector:
+  #     enabled: false
+  #     allowedNamespaces: ""
+  #     autoEnabled: true

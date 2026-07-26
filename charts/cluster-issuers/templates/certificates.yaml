@@ -1,0 +1,70 @@
+{{- range $name, $cert := .Values.certificates }}
+{{- $globalCerts := dict }}
+{{- if hasKey $.Values.global "certificates" }}
+{{- $globalCerts = $.Values.global.certificates }}
+{{- end }}
+{{- $namespace := default (default "cert-manager" (dig "namespace" "" $globalCerts)) $cert.namespace }}
+{{- $secretName := default (printf "%s-tls" $name) $cert.secretName }}
+{{- $issuerKind := default "ClusterIssuer" $cert.issuerRef.kind }}
+{{- /* Reflector configuration with fallback chain */ -}}
+{{- $globalReflector := dig "reflector" dict $globalCerts }}
+{{- $certReflector := dig "reflector" dict $cert }}
+{{- $reflectorEnabled := false }}
+{{- if hasKey $certReflector "enabled" }}
+{{- $reflectorEnabled = $certReflector.enabled }}
+{{- else if hasKey $globalReflector "enabled" }}
+{{- $reflectorEnabled = $globalReflector.enabled }}
+{{- end }}
+{{- $reflectorNamespaces := default (default "" $globalReflector.allowedNamespaces) $certReflector.allowedNamespaces }}
+{{- $reflectorAutoEnabled := true }}
+{{- if hasKey $certReflector "autoEnabled" }}
+{{- $reflectorAutoEnabled = $certReflector.autoEnabled }}
+{{- else if hasKey $globalReflector "autoEnabled" }}
+{{- $reflectorAutoEnabled = $globalReflector.autoEnabled }}
+{{- end }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $name }}
+  namespace: {{ $namespace }}
+{{- if or $reflectorEnabled $cert.annotations }}
+  annotations:
+{{- if $reflectorEnabled }}
+    reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+    reflector.v1.k8s.emberstack.com/reflection-auto-enabled: {{ $reflectorAutoEnabled | quote }}
+{{- if $reflectorNamespaces }}
+    reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: {{ $reflectorNamespaces | quote }}
+{{- end }}
+{{- end }}
+{{- with $cert.annotations }}
+{{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
+spec:
+  secretName: {{ $secretName }}
+{{- if $reflectorEnabled }}
+  secretTemplate:
+    annotations:
+      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+      reflector.v1.k8s.emberstack.com/reflection-auto-enabled: {{ $reflectorAutoEnabled | quote }}
+{{- if $reflectorNamespaces }}
+      reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: {{ $reflectorNamespaces | quote }}
+{{- end }}
+{{- end }}
+  issuerRef:
+    name: {{ $cert.issuerRef.name }}
+    kind: {{ $issuerKind }}
+  dnsNames:
+{{- toYaml $cert.dnsNames | nindent 4 }}
+{{- with $cert.duration }}
+  duration: {{ . }}
+{{- end }}
+{{- with $cert.renewBefore }}
+  renewBefore: {{ . }}
+{{- end }}
+{{- with $cert.privateKey }}
+  privateKey:
+{{- toYaml . | nindent 4 }}
+{{- end }}
+---
+{{- end }}
