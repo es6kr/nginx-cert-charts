@@ -6,6 +6,7 @@ A Helm chart repository for Kubernetes and K3s infrastructure core components (`
 
 - **`k3s-infra-base`**: Umbrella chart rendering ArgoCD Applications for `ingress-nginx`, `cluster-issuers`, `longhorn`, `reflector`, and `cnpg-operator` with single-values `enabled` toggles.
 - **`cluster-issuers`**: Chart for deploying cert-manager `ClusterIssuers` for Let's Encrypt with global and per-issuer overrides.
+- **`host-ip-service`**: Chart for bridging host-level TCP/HTTP services (e.g., Docker containers running on host IP `10.0.0.36`) into Kubernetes Service/Endpoints and generating corresponding Ingress resources with cert-manager TLS annotations.
 
 ## Installation
 
