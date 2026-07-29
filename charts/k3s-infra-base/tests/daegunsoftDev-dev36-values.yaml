@@ -1,0 +1,37 @@
+global:
+  cluster:
+    name: dgs-dev36
+
+components:
+  ingress-nginx:
+    enabled: true
+    values:
+      controller:
+        service:
+          externalIPs:
+            - 100.82.193.45
+  cluster-issuers:
+    enabled: true
+    values:
+      global:
+        acme:
+          email: daegun5052@gmail.com
+      clusterIssuers:
+        letsencrypt-prod:
+          server: https://acme-v02.api.letsencrypt.org/directory
+          privateKeySecret: letsencrypt-prod
+          solvers:
+            - dns01:
+                cloudflare:
+                  apiTokenSecretRef:
+                    name: cloudflare-api-token
+                    key: api-token
+              selector:
+                dnsZones:
+                  - dgs.ai.kr
+  longhorn:
+    enabled: false
+  reflector:
+    enabled: true
+  cnpg-operator:
+    enabled: true

@@ -1,0 +1,69 @@
+global:
+  cluster:
+    name: ""                              # 필수: 클러스터 식별자
+  argocd:
+    namespace: argocd
+    project: default
+  destination:
+    server: https://kubernetes.default.svc
+
+components:
+  ingress-nginx:
+    enabled: true
+    chart:
+      repoURL: https://kubernetes.github.io/ingress-nginx
+      chart: ingress-nginx
+      targetRevision: 4.11.3
+    namespace: ingress-nginx
+    syncWave: "1"
+    values:
+      controller:
+        service:
+          externalIPs: []                 # 오버라이드: 클러스터 VIP/외부 IP
+  cluster-issuers:
+    enabled: true
+    chart:
+      repoURL: https://es6kr.github.io/k3s-infra-charts
+      chart: cluster-issuers
+      targetRevision: 0.3.0
+    namespace: cert-manager
+    syncWave: "2"
+    values:
+      certManager:
+        enabled: true
+      global:
+        acme:
+          email: ""                       # 오버라이드(필수): ACME 담당자
+      clusterIssuers: {}
+  longhorn:
+    enabled: true
+    chart:
+      repoURL: https://charts.longhorn.io
+      chart: longhorn
+      targetRevision: 1.7.2
+    namespace: longhorn-system
+    syncWave: "1"
+    values:
+      persistence:
+        defaultClassReplicaCount: 2       # 오버라이드: 노드 수 기반
+  reflector:
+    enabled: true
+    chart:
+      repoURL: https://emberstack.github.io/helm-charts
+      chart: reflector
+      targetRevision: 7.1.288
+    namespace: reflector
+    syncWave: "2"
+    values: {}
+  cnpg-operator:
+    enabled: false
+    chart:
+      repoURL: https://cloudnative-pg.github.io/charts
+      chart: cloudnative-pg
+      targetRevision: 0.22.1
+    namespace: cnpg-system
+    syncWave: "3"
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+    values: {}

@@ -1,0 +1,7 @@
+apiVersion: v2
+name: k3s-infra-base
+description: Umbrella chart rendering ArgoCD Applications for k3s infra-core components
+type: application
+version: 0.1.0
+annotations:
+  "helm.sh/schema": values.schema.json

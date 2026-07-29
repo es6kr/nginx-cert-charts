@@ -1,0 +1,40 @@
+global:
+  cluster:
+    name: es6kr-oci
+
+components:
+  ingress-nginx:
+    enabled: true
+    values:
+      controller:
+        service:
+          externalIPs:
+            - 203.0.113.10
+  cluster-issuers:
+    enabled: true
+    values:
+      global:
+        acme:
+          email: drumrobot43@gmail.com
+      clusterIssuers:
+        letsencrypt-prod:
+          server: https://acme-v02.api.letsencrypt.org/directory
+          privateKeySecret: letsencrypt-prod
+          solvers:
+            - dns01:
+                cloudflare:
+                  apiTokenSecretRef:
+                    name: cloudflare-api-token
+                    key: api-token
+              selector:
+                dnsZones:
+                  - es6.kr
+  longhorn:
+    enabled: true
+    values:
+      persistence:
+        defaultClassReplicaCount: 2
+  reflector:
+    enabled: true
+  cnpg-operator:
+    enabled: true

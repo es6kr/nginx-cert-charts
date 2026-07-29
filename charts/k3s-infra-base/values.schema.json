@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["global", "components"],
+  "properties": {
+    "global": {
+      "type": "object",
+      "required": ["cluster"],
+      "properties": {
+        "cluster": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "properties": {
+        "ingress-nginx": {
+          "type": "object",
+          "if": {
+            "properties": { "enabled": { "const": true } }
+          },
+          "then": {
+            "required": ["values"],
+            "properties": {
+              "values": {
+                "type": "object",
+                "required": ["controller"],
+                "properties": {
+                  "controller": {
+                    "type": "object",
+                    "required": ["service"],
+                    "properties": {
+                      "service": {
+                        "type": "object",
+                        "required": ["externalIPs"],
+                        "properties": {
+                          "externalIPs": {
+                            "type": "array",
+                            "minItems": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "cluster-issuers": {
+          "type": "object",
+          "if": {
+            "properties": { "enabled": { "const": true } }
+          },
+          "then": {
+            "required": ["values"],
+            "properties": {
+              "values": {
+                "type": "object",
+                "required": ["global"],
+                "properties": {
+                  "global": {
+                    "type": "object",
+                    "required": ["acme"],
+                    "properties": {
+                      "acme": {
+                        "type": "object",
+                        "required": ["email"],
+                        "properties": {
+                          "email": {
+                            "type": "string",
+                            "format": "email",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "cnpg-operator": {
+          "type": "object",
+          "if": {
+            "properties": { "enabled": { "const": true } }
+          },
+          "then": {
+            "required": ["syncOptions"],
+            "properties": {
+              "syncOptions": {
+                "type": "array",
+                "contains": { "const": "ServerSideApply=true" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
