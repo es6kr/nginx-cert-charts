@@ -113,4 +113,16 @@ entries:
     urls:
     - https://github.com/es6kr/nginx-cert-charts/releases/download/host-ip-service-0.0.6/host-ip-service-0.0.6.tgz
     version: 0.0.6
-generated: "2026-07-26T00:58:17.691859592Z"
+  k3s-infra-base:
+  - annotations:
+      helm.sh/schema: values.schema.json
+    apiVersion: v2
+    created: "2026-07-29T04:13:28.857310746Z"
+    description: Umbrella chart rendering ArgoCD Applications for k3s infra-core components
+    digest: 1e5678e2366444a41ae3abfba19cf16cd117790c2c5353fed5d554d2f83f017c
+    name: k3s-infra-base
+    type: application
+    urls:
+    - https://github.com/es6kr/k3s-infra-charts/releases/download/k3s-infra-base-0.1.0/k3s-infra-base-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-07-29T04:13:28.857335864Z"
