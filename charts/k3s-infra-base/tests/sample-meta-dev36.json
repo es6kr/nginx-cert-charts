@@ -1,0 +1,13 @@
+{
+  "name": "dgs-dev36",
+  "ingress": "nginx",
+  "externalIPs": ["100.82.193.45"],
+  "domain": "dgs.ai.kr",
+  "acmeEmail": "daegun5052@gmail.com",
+  "cloudflareSecret": "cloudflare-api-token",
+  "nodeCount": 3,
+  "components": {
+    "longhorn": false,
+    "cnpg-operator": true
+  }
+}
